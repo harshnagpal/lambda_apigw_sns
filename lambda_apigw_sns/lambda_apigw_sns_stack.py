@@ -14,10 +14,32 @@ class LambdaApigwSnsStack(Stack):
         super().__init__(scope, construct_id, **kwargs)
         api_lambda = _lambda.Function(
             self, 'apiLambda',
+            
             runtime=_lambda.Runtime.PYTHON_3_7,
             code=_lambda.Code.from_asset('src'),
             handler='apiLambda.handler',
         )
+        
+        api = apigw.RestApi(self,"broker-api")
+        # v1 = api.root.add_resource("v1")
+        # echo = api.root.add_resource("echo")
+        lambda_method = api.root.add_resource("lambda")
+        api_lambda_method = lambda_method.add_method("GET",apigw.LambdaIntegration(api_lambda),api_key_required=True)
+
+        plan = api.add_usage_plan(
+            "UsagePlan",
+            name="Easy",
+            throttle=apigw.ThrottleSettings (
+            rate_limit=10,
+            burst_limit=2
+            )
+        )
+        key=api.add_api_key("ApiKey")
+        plan.add_api_key(key)
+        
+
+
+        
 
 
         
